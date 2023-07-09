@@ -1,9 +1,16 @@
-pub struct CompoundTask {
-    name: String
+use super::Method;
+
+#[derive(Debug)]
+pub struct CompoundTask <'a>{
+    pub name: String,
+    methods: Vec<Method<'a>>
 }
 
-impl CompoundTask {
-    pub fn new(name: String) -> Self {
-        CompoundTask { name: name }
+impl <'a> CompoundTask <'a>{
+    pub fn new(name: String, methods: Vec<Method<'a>>) -> Self {
+        CompoundTask {
+            name,
+            methods
+        }
     }
 }

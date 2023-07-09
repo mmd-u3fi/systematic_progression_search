@@ -1,5 +1,6 @@
+#[derive(Debug, PartialEq)]
 pub struct PrimitiveAction {
-    name: String
+    pub name: String
 }
 
 impl PrimitiveAction {
