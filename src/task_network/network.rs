@@ -30,6 +30,10 @@ impl <'a> HTN <'a>{
     pub fn get_unconstrained_tasks(&self) -> HashSet<u32> {
         self.network.get_unconstrained_nodes()
     }
+
+    pub fn get_incoming_edges(&self, id: u32) -> HashSet<u32> {
+        self.network.get_incoming_edges(id)
+    }
 }
 
 
