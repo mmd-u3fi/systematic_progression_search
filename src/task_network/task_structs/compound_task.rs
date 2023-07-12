@@ -13,4 +13,8 @@ impl <'a> CompoundTask <'a>{
             methods
         }
     }
+
+    pub fn add_method(&mut self, method: Method<'a>) {
+        self.methods.push(method);
+    }
 }
