@@ -30,6 +30,24 @@ impl Graph {
         }
     }
 
+    pub fn get_edges(&self) -> Vec<(u32, u32)> {
+        self.edges
+            .clone()
+            .into_iter()
+            .map(|(k, v)| repeat(k).zip(v).collect::<Vec<_>>())
+            .flatten()
+            .collect()
+    }
+
+    pub fn convert_edges_to_vec(edges: &HashMap<u32, HashSet<u32>>) -> Vec<(u32, u32)> {
+        edges
+            .clone()
+            .into_iter()
+            .map(|(k, v)| repeat(k).zip(v).collect::<Vec<_>>())
+            .flatten()
+            .collect()
+    }
+
     pub fn count_nodes(&self) -> usize {
         self.nodes.len()
     }
@@ -89,17 +107,22 @@ impl Graph {
         let nodes = self.nodes.clone().union(&subgraph.nodes).cloned().collect();
         let mut orderings = self.edges.clone();
 
+        // Adding incoming edges
         let unconstrained_nodes = subgraph.get_unconstrained_nodes();
         for node in incoming_edges.iter() {
             match orderings.contains_key(node) {
                 false => orderings.insert(*node, unconstrained_nodes.clone()),
                 true => orderings.insert(
                     *node,
-                    unconstrained_nodes.union(orderings.get(node).unwrap()).cloned().collect(),
+                    unconstrained_nodes
+                        .union(orderings.get(node).unwrap())
+                        .cloned()
+                        .collect(),
                 ),
             };
         }
 
+        // Adding outgoing edges
         let terminal_nodes: HashSet<u32> = subgraph
             .nodes
             .difference(&subgraph.edges.keys().cloned().collect())
