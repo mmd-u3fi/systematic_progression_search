@@ -143,6 +143,32 @@ impl Graph {
             .collect();
         Graph::new(nodes, orderings)
     }
+
+    pub fn to_layers(&self) -> Vec<HashSet<u32>> {
+        let mut result: Vec<HashSet<u32>> = Vec::new();
+        let mut prev_layer = self.get_unconstrained_nodes();
+        result.push(prev_layer.clone());
+        loop {
+            let mut layer: HashSet<u32> = HashSet::new();
+            for node in prev_layer.iter(){
+                match self.edges.get(node) {
+                    Some(x) => {
+                        for outgoing in x.iter() {
+                            layer.insert(*outgoing);
+                        }
+                    },
+                    None => continue
+                }
+            }
+            if layer.is_empty() {
+                break;
+            }
+            result.push(layer.clone());
+            prev_layer = layer;
+        }
+        result
+        
+    }
 }
 
 #[cfg(test)]
@@ -211,5 +237,20 @@ mod tests {
         assert_eq!(*result.edges.get(&6).unwrap(), HashSet::from([7, 8]));
         assert_eq!(*result.edges.get(&7).unwrap(), HashSet::from([9]));
         assert_eq!(*result.edges.get(&8).unwrap(), HashSet::from([9]));
+    }
+
+    #[test]
+    pub fn graph_to_layers_test() {
+        // first graph
+        let nodes: HashSet<u32> = HashSet::from([1, 2, 3, 4]);
+        let orderings: Vec<(u32, u32)> = Vec::from([
+            (1,3), (2,3), (3,4)
+        ]);
+        let g = Graph::new(nodes, orderings);
+        let result = g.to_layers();
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0], HashSet::from([1,2]));
+        assert_eq!(result[1], HashSet::from([3]));
+        assert_eq!(result[2], HashSet::from([4]));
     }
 }

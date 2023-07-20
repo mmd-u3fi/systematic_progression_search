@@ -1,13 +1,15 @@
 use std::cmp::PartialEq;
+use std::hash::{Hash, Hasher};
+
 use super::{PrimitiveAction, CompoundTask};
 
 #[derive(Debug)]
-pub enum Task <'a> {
-    Primitive(PrimitiveAction),
-    Compound(CompoundTask<'a>),
+pub enum Task <'a, T> where T: Eq + Hash {
+    Primitive(PrimitiveAction<T>),
+    Compound(CompoundTask<'a, T>),
 }
 
-impl <'a> PartialEq for Task<'a> {
+impl <'a, T: Eq + Hash> PartialEq for Task<'a, T> {
     fn eq(&self, other: &Self) -> bool {
         match self {
             Self::Primitive(x) => {
@@ -31,5 +33,20 @@ impl <'a> PartialEq for Task<'a> {
 
     fn ne(&self, other: &Self) -> bool {
         !self.eq(&other)
+    }
+}
+
+impl <'a, T: Eq + Hash> Eq for Task<'a, T> {}
+
+impl <'a, T: Eq + Hash> Hash for Task<'a, T> {
+    fn hash<H: Hasher>(&self, hasher: &mut H) {
+        match self {
+            Task::Compound(x) => {
+                x.name.hash(hasher)
+            }
+            Task::Primitive(x) => {
+                x.name.hash(hasher)
+            }
+        }
     }
 }

@@ -1,20 +1,22 @@
+use std::hash::Hash;
+
 use super::Method;
 
 #[derive(Debug)]
-pub struct CompoundTask <'a>{
+pub struct CompoundTask <'a, T: Hash + Eq>{
     pub name: String,
-    methods: Vec<Method<'a>>
+    methods: Vec<Method<'a, T>>
 }
 
-impl <'a> CompoundTask <'a>{
-    pub fn new(name: String, methods: Vec<Method<'a>>) -> Self {
+impl <'a, T: Hash + Eq> CompoundTask <'a, T>{
+    pub fn new(name: String, methods: Vec<Method<'a, T>>) -> Self {
         CompoundTask {
             name,
             methods
         }
     }
 
-    pub fn add_method(&mut self, method: Method<'a>) {
+    pub fn add_method(&mut self, method: Method<'a, T>) {
         self.methods.push(method);
     }
 }
