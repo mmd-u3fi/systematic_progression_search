@@ -239,7 +239,8 @@ mod tests {
         assert_eq!(result.count_tasks(), 8);
         assert_eq!(result.get_unconstrained_tasks(), HashSet::from([1, 2]));
         assert_eq!(Graph::convert_edges_to_vec(&result.network.edges).len(), 8);
-        assert_eq!(result.network.get_incoming_edges(1).len(), 1);
+        println!("{:?}", result);
+        assert_eq!(result.network.edges.get(&1).unwrap().len(), 1);
     }
 
     #[test]
