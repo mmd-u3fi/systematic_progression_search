@@ -162,7 +162,8 @@ mod tests {
     fn instantiation() {
         let t: HashSet<u32> = HashSet::from([1, 2, 3, 4]);
         let (t1, t2, t3, t4) = create_initial_tasks();
-        let alpha: HashMap<u32, &Task<u32>> = HashMap::from([(1, &t1), (2, &t2), (3, &t3), (4, &t4)]);
+        let alpha: HashMap<u32, &Task<u32>> =
+            HashMap::from([(1, &t1), (2, &t2), (3, &t3), (4, &t4)]);
         let orderings: Vec<(u32, u32)> = Vec::from([(1, 3), (2, 3), (3, 4)]);
         let network = HTN::new(t, orderings, alpha);
         assert_eq!(network.count_tasks(), 4);
@@ -173,7 +174,13 @@ mod tests {
         assert_eq!(network.get_task(5), None);
     }
 
-    fn decomposition_tasks<'a>() -> (Task<'a, u32>, Task<'a, u32>, Task<'a, u32>, Task<'a, u32>, Task<'a, u32>) {
+    fn decomposition_tasks<'a>() -> (
+        Task<'a, u32>,
+        Task<'a, u32>,
+        Task<'a, u32>,
+        Task<'a, u32>,
+        Task<'a, u32>,
+    ) {
         let empty = HashSet::new();
         let t1 = Task::Primitive(PrimitiveAction::new(
             "BuildFoundation".to_string(),
@@ -212,7 +219,8 @@ mod tests {
     fn unconstrained_tasks_test() {
         let t: HashSet<u32> = HashSet::from([1, 2, 3, 4]);
         let (t1, t2, t3, t4) = create_initial_tasks();
-        let alpha: HashMap<u32, &Task<u32>> = HashMap::from([(1, &t1), (2, &t2), (3, &t3), (4, &t4)]);
+        let alpha: HashMap<u32, &Task<u32>> =
+            HashMap::from([(1, &t1), (2, &t2), (3, &t3), (4, &t4)]);
         let orderings: Vec<(u32, u32)> = Vec::from([(1, 3), (2, 3), (3, 4)]);
         let network = HTN::new(t, orderings, alpha);
         let unconstrained = network.get_unconstrained_tasks();
@@ -232,7 +240,8 @@ mod tests {
                 HashMap::from([(1, &t5), (2, &t6), (3, &t7), (4, &t8), (5, &t9)]),
             ),
         );
-        let alpha: HashMap<u32, &Task<u32>> = HashMap::from([(1, &t1), (2, &t2), (3, &t3), (4, &t4)]);
+        let alpha: HashMap<u32, &Task<u32>> =
+            HashMap::from([(1, &t1), (2, &t2), (3, &t3), (4, &t4)]);
         let orderings: Vec<(u32, u32)> = Vec::from([(1, 3), (2, 3), (3, 4)]);
         let network = HTN::new(t, orderings, alpha);
         let result = network.decompose(3, &t3_method);

@@ -150,14 +150,14 @@ impl Graph {
         result.push(prev_layer.clone());
         loop {
             let mut layer: HashSet<u32> = HashSet::new();
-            for node in prev_layer.iter(){
+            for node in prev_layer.iter() {
                 match self.edges.get(node) {
                     Some(x) => {
                         for outgoing in x.iter() {
                             layer.insert(*outgoing);
                         }
-                    },
-                    None => continue
+                    }
+                    None => continue,
                 }
             }
             if layer.is_empty() {
@@ -167,7 +167,6 @@ impl Graph {
             prev_layer = layer;
         }
         result
-        
     }
 }
 
@@ -243,13 +242,11 @@ mod tests {
     pub fn graph_to_layers_test() {
         // first graph
         let nodes: HashSet<u32> = HashSet::from([1, 2, 3, 4]);
-        let orderings: Vec<(u32, u32)> = Vec::from([
-            (1,3), (2,3), (3,4)
-        ]);
+        let orderings: Vec<(u32, u32)> = Vec::from([(1, 3), (2, 3), (3, 4)]);
         let g = Graph::new(nodes, orderings);
         let result = g.to_layers();
         assert_eq!(result.len(), 3);
-        assert_eq!(result[0], HashSet::from([1,2]));
+        assert_eq!(result[0], HashSet::from([1, 2]));
         assert_eq!(result[1], HashSet::from([3]));
         assert_eq!(result[2], HashSet::from([4]));
     }
