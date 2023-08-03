@@ -3,17 +3,17 @@ use std::hash::Hash;
 use super::Method;
 
 #[derive(Debug)]
-pub struct CompoundTask<'a, T: Hash + Eq> {
+pub struct CompoundTask<T: Hash + Eq> {
     pub name: String,
-    methods: Vec<Method<'a, T>>,
+    methods: Vec<Method<T>>,
 }
 
-impl<'a, T: Hash + Eq> CompoundTask<'a, T> {
-    pub fn new(name: String, methods: Vec<Method<'a, T>>) -> Self {
+impl<T: Hash + Eq> CompoundTask<T> {
+    pub fn new(name: String, methods: Vec<Method<T>>) -> Self {
         CompoundTask { name, methods }
     }
 
-    pub fn add_method(&mut self, method: Method<'a, T>) {
+    pub fn add_method(&mut self, method: Method<T>) {
         self.methods.push(method);
     }
 }

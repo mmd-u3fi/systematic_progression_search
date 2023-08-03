@@ -2,19 +2,20 @@ use super::graph::Graph;
 use super::task_structs::{CompoundTask, Method, PrimitiveAction, Task};
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
+use std::rc::Rc;
 
 #[derive(Debug)]
-pub struct HTN<'a, T: Hash + Eq> {
+pub struct HTN<T: Hash + Eq> {
     network: Graph,
-    mappings: HashMap<u32, &'a Task<'a, T>>,
+    mappings: HashMap<u32, Rc<Task<T>>>,
 }
 
-impl<'a, T: Hash + Eq> HTN<'a, T> {
+impl<T: Hash + Eq> HTN<T> {
     pub fn new(
         tasks: HashSet<u32>,
         orderings: Vec<(u32, u32)>,
-        mappings: HashMap<u32, &'a Task<T>>,
-    ) -> HTN<'a, T> {
+        mappings: HashMap<u32, Rc<Task<T>>>,
+    ) -> HTN<T> {
         HTN {
             network: Graph::new(tasks, orderings),
             mappings,
@@ -27,7 +28,7 @@ impl<'a, T: Hash + Eq> HTN<'a, T> {
 
     pub fn get_task(&self, id: u32) -> Option<&Task<T>> {
         match self.mappings.get_key_value(&id) {
-            Some((_, y)) => Some(*y),
+            Some((_, y)) => Some(&*y),
             None => None,
         }
     }
@@ -40,7 +41,7 @@ impl<'a, T: Hash + Eq> HTN<'a, T> {
         self.network.get_incoming_edges(id)
     }
 
-    pub fn decompose(&self, id: u32, method: &'a Method<T>) -> HTN<'a, T> {
+    pub fn decompose(&self, id: u32, method: &Method<T>) -> HTN<T> {
         // TODO: Refactor this function
         let mut subgraph_nodes = method.decomposition.network.nodes.clone();
         let mut subgraph_edges = method.decomposition.network.edges.clone();
@@ -102,7 +103,7 @@ impl<'a, T: Hash + Eq> HTN<'a, T> {
         HTN::new(new_nodes, new_graph.get_edges(), new_mappings)
     }
 
-    pub fn is_isomorphic(tn1: &HTN<'a, T>, tn2: &HTN<'a, T>) -> bool {
+    pub fn is_isomorphic(tn1: &HTN<T>, tn2: &HTN<T>) -> bool {
         let layers_1 = tn1.network.to_layers();
         let layers_2 = tn2.network.to_layers();
         if layers_1.len() != layers_2.len() {
@@ -120,10 +121,10 @@ impl<'a, T: Hash + Eq> HTN<'a, T> {
         return true;
     }
 
-    fn layers_to_tasks(&self, layers: Vec<HashSet<u32>>) -> Vec<HashSet<&'a Task<'a, T>>> {
+    fn layers_to_tasks(&self, layers: Vec<HashSet<u32>>) -> Vec<HashSet<&Task<T>>> {
         let mut result = Vec::with_capacity(layers.len());
         for layer in layers.into_iter() {
-            let tasks = layer.into_iter().map(|x| *self.mappings.get(&x).unwrap());
+            let tasks = layer.into_iter().map(|x| self.mappings.get(&x).unwrap().as_ref());
             result.push(tasks.collect());
         }
         result
@@ -134,7 +135,7 @@ impl<'a, T: Hash + Eq> HTN<'a, T> {
 mod tests {
     use super::*;
 
-    fn create_initial_tasks<'a>() -> (Task<'a, u32>, Task<'a, u32>, Task<'a, u32>, Task<'a, u32>) {
+    fn create_initial_tasks<'a>() -> (Rc<Task<u32>>, Rc<Task<u32>>, Rc<Task<u32>>, Rc<Task<u32>>) {
         let empty = HashSet::new();
         let t1 = Task::Primitive(PrimitiveAction::new(
             "ObtainPermit".to_string(),
@@ -155,6 +156,7 @@ mod tests {
             empty.clone(),
             empty.clone(),
         ));
+        let (t1, t2, t3, t4) = (Rc::new(t1), Rc::new(t2), Rc::new(t3), Rc::new(t4));
         (t1, t2, t3, t4)
     }
 
@@ -162,24 +164,24 @@ mod tests {
     fn instantiation() {
         let t: HashSet<u32> = HashSet::from([1, 2, 3, 4]);
         let (t1, t2, t3, t4) = create_initial_tasks();
-        let alpha: HashMap<u32, &Task<u32>> =
-            HashMap::from([(1, &t1), (2, &t2), (3, &t3), (4, &t4)]);
+        let alpha =
+            HashMap::from([(1, Rc::clone(&t1)), (2, Rc::clone(&t2)), (3, Rc::clone(&t3)), (4, Rc::clone(&t4))]);
         let orderings: Vec<(u32, u32)> = Vec::from([(1, 3), (2, 3), (3, 4)]);
         let network = HTN::new(t, orderings, alpha);
         assert_eq!(network.count_tasks(), 4);
-        assert_eq!(network.get_task(1).unwrap(), &t1);
-        assert_eq!(network.get_task(2).unwrap(), &t2);
-        assert_eq!(network.get_task(3).unwrap(), &t3);
-        assert_eq!(network.get_task(4).unwrap(), &t4);
+        assert_eq!(network.get_task(1).unwrap(), t1.as_ref());
+        assert_eq!(network.get_task(2).unwrap(), t2.as_ref());
+        assert_eq!(network.get_task(3).unwrap(), t3.as_ref());
+        assert_eq!(network.get_task(4).unwrap(), t4.as_ref());
         assert_eq!(network.get_task(5), None);
     }
 
     fn decomposition_tasks<'a>() -> (
-        Task<'a, u32>,
-        Task<'a, u32>,
-        Task<'a, u32>,
-        Task<'a, u32>,
-        Task<'a, u32>,
+        Task<u32>,
+        Task<u32>,
+        Task<u32>,
+        Task<u32>,
+        Task<u32>,
     ) {
         let empty = HashSet::new();
         let t1 = Task::Primitive(PrimitiveAction::new(
@@ -219,8 +221,8 @@ mod tests {
     fn unconstrained_tasks_test() {
         let t: HashSet<u32> = HashSet::from([1, 2, 3, 4]);
         let (t1, t2, t3, t4) = create_initial_tasks();
-        let alpha: HashMap<u32, &Task<u32>> =
-            HashMap::from([(1, &t1), (2, &t2), (3, &t3), (4, &t4)]);
+        let alpha =
+            HashMap::from([(1, t1), (2, t2), (3, t3), (4, t4)]);
         let orderings: Vec<(u32, u32)> = Vec::from([(1, 3), (2, 3), (3, 4)]);
         let network = HTN::new(t, orderings, alpha);
         let unconstrained = network.get_unconstrained_tasks();
@@ -237,11 +239,12 @@ mod tests {
             HTN::new(
                 HashSet::from([1, 2, 3, 4, 5]),
                 Vec::from([(1, 2), (2, 3), (2, 4), (3, 5), (4, 5)]),
-                HashMap::from([(1, &t5), (2, &t6), (3, &t7), (4, &t8), (5, &t9)]),
+                HashMap::from(
+                    [(1, Rc::new(t5)), (2, Rc::new(t6)), (3, Rc::new(t7)), (4, Rc::new(t8)), (5, Rc::new(t9))]
+                ),
             ),
         );
-        let alpha: HashMap<u32, &Task<u32>> =
-            HashMap::from([(1, &t1), (2, &t2), (3, &t3), (4, &t4)]);
+        let alpha = HashMap::from([(1, t1), (2, t2), (3, t3), (4, t4)]);
         let orderings: Vec<(u32, u32)> = Vec::from([(1, 3), (2, 3), (3, 4)]);
         let network = HTN::new(t, orderings, alpha);
         let result = network.decompose(3, &t3_method);
@@ -257,10 +260,12 @@ mod tests {
         // first graph
         let nodes1: HashSet<u32> = HashSet::from([1, 2, 3, 4]);
         let orderings1: Vec<(u32, u32)> = Vec::from([(1, 3), (2, 3), (3, 4)]);
+        let alpha =
+        HashMap::from([(1, t1), (2, t2), (3, t3), (4, t4)]);
         let htn1 = HTN::new(
             nodes1,
             orderings1,
-            HashMap::from([(1, &t1), (2, &t2), (3, &t3), (4, &t4)]),
+            alpha,
         );
 
         let (t5, t6, t7, t8) = create_initial_tasks();
@@ -270,7 +275,7 @@ mod tests {
         let htn2 = HTN::new(
             nodes2,
             orderings2,
-            HashMap::from([(5, &t5), (6, &t6), (7, &t7), (8, &t8)]),
+            HashMap::from([(5, t5), (6, t6), (7, t7), (8, t8)]),
         );
 
         let result = HTN::is_isomorphic(&htn1, &htn2);

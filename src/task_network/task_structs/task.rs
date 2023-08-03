@@ -4,15 +4,15 @@ use std::hash::{Hash, Hasher};
 use super::{CompoundTask, PrimitiveAction};
 
 #[derive(Debug)]
-pub enum Task<'a, T>
+pub enum Task<T>
 where
     T: Eq + Hash,
 {
     Primitive(PrimitiveAction<T>),
-    Compound(CompoundTask<'a, T>),
+    Compound(CompoundTask<T>),
 }
 
-impl<'a, T: Eq + Hash> PartialEq for Task<'a, T> {
+impl<T: Eq + Hash> PartialEq for Task<T> {
     fn eq(&self, other: &Self) -> bool {
         match self {
             Self::Primitive(x) => match other {
@@ -31,9 +31,9 @@ impl<'a, T: Eq + Hash> PartialEq for Task<'a, T> {
     }
 }
 
-impl<'a, T: Eq + Hash> Eq for Task<'a, T> {}
+impl<T: Eq + Hash> Eq for Task<T> {}
 
-impl<'a, T: Eq + Hash> Hash for Task<'a, T> {
+impl<T: Eq + Hash> Hash for Task<T> {
     fn hash<H: Hasher>(&self, hasher: &mut H) {
         match self {
             Task::Compound(x) => x.name.hash(hasher),
