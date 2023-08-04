@@ -68,7 +68,7 @@ impl <T: Hash + Eq + Clone + std::fmt::Debug> ProgressionSearch<T> {
 mod test {
     use super::*;
     use crate::example::create_problem_instance;
-
+    use crate::example::create_state_problem_instance;
     #[test]
     pub fn hierarchy_correctness_test() {
         let htn = create_problem_instance();
@@ -80,6 +80,20 @@ mod test {
             assert_eq!(x[6], "BuildInterior");
             assert_eq!(x[7], "PayBuilder");
         }
+    }
 
+    #[test]
+    pub fn state_progression_test() {
+        let htn = create_state_problem_instance();
+        let mut search = ProgressionSearch::<String>::new();
+        let result = search.run(HashSet::new(), htn);
+        if let SearchResult::Solved(x) = result {
+            assert_eq!(x[0], "ObtainPermit");
+            assert_eq!(x[1], "HireBuilder");
+            assert_eq!(x[2], "BuildFoundation");
+            assert_eq!(x[3], "BuildFrame");
+            assert_eq!(x[6], "BuildInterior");
+            assert_eq!(x[7], "PayBuilder");
+        }
     }
 }
