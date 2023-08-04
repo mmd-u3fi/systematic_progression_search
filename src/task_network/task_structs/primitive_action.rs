@@ -28,11 +28,9 @@ impl<T: Eq + Hash> PrimitiveAction<T> {
 
 impl<T> Applicability<T> for PrimitiveAction<T>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone,
 {
     fn is_applicable(&self, state: &HashSet<T>) -> bool
-    where
-        T: Eq + Hash,
     {
         for condition in self.pre_cond.iter() {
             if !state.contains(condition) {
@@ -40,6 +38,19 @@ where
             }
         }
         true
+    }
+
+    fn transition(&self, state: &HashSet<T>) -> HashSet<T>
+    where T: Eq + Hash + Clone{
+        let mut new_state: HashSet<T> = state
+            .iter()
+            .cloned()
+            .filter(|x| !self.del_effects.contains(x))
+            .collect();
+        for add in self.add_effects.iter() {
+            new_state.insert(add.clone());
+        }
+        new_state
     }
 }
 
@@ -62,5 +73,20 @@ mod tests {
         assert_eq!(action.is_applicable(&state), true);
         state.remove("object_visible");
         assert_eq!(action.is_applicable(&state), false);
+    }
+
+    #[test]
+    pub fn transition_test() {
+        let mut state = HashSet::from(["is_loaded", "object_visible"]);
+        let precond = HashSet::from(["is_loaded", "object_visible"]);
+        let action = PrimitiveAction::new(
+            "Action1".to_string(),
+            precond,
+            HashSet::from(["ready"]),
+            HashSet::from(["is_loaded"]),
+        );
+        let new_state = action.transition(&state);
+        assert_eq!(new_state.contains("ready"), true);
+        assert_eq!(new_state.len(), 2);
     }
 }
