@@ -1,6 +1,8 @@
-use std::{collections::HashSet, hash::Hash};
+use std::{collections::HashSet};
 
-pub trait Applicability<T: Eq + Hash + Clone> {
-    fn is_applicable(&self, state: &HashSet<T>) -> bool;
-    fn transition(&self, state: &HashSet<T>) -> HashSet<T>;
+pub trait Applicability {
+    type T;
+    fn is_applicable(&self, state: &HashSet<Self::T>) -> bool;
+    fn transition(&self, state: &HashSet<Self::T>) -> HashSet<Self::T>
+    where Self::T: Clone;
 }

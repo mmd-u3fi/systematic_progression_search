@@ -1,26 +1,82 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 use std::hash::Hash;
+
+use crate::task_network::{Task, PrimitiveAction};
 
 use super::HTN;
 use super::search_result::SearchResult;
 use super::search_node::SearchNode;
-use super::fringe::Fringe;
+use super::Applicability;
 
-pub struct ProgressionSearch<U> 
-where U: Fringe {
-    fringe: U
+pub struct ProgressionSearch<T: Hash + Eq>{
+    fringe: VecDeque<SearchNode<T>>
 }
 
-impl <U: Fringe> ProgressionSearch<U> {
-    pub fn new(fringe: U) -> ProgressionSearch<U> {
-        ProgressionSearch { fringe }
+impl <T: Hash + Eq + Clone> ProgressionSearch<T> {
+    pub fn new() -> ProgressionSearch<T> {
+        ProgressionSearch { fringe: VecDeque::new() }
     }
 
-    pub fn run<T:Hash + Eq>(initial_state: HashSet<u32>, initial_network: HTN<T>) -> SearchResult {
-        unimplemented!()
+    pub fn run(&mut self, initial_state: HashSet<T>, initial_network: HTN<T>) -> SearchResult {
+        let init = SearchNode::new(initial_state, initial_network, Vec::new());
+        self.fringe.push_back(init);
+        while !self.fringe.is_empty() {
+            let n = self.fringe.pop_front().unwrap();
+            if n.is_goal() { return SearchResult::Solved(n.sequence);}
+            let unconstrained = n.network.get_unconstrained_tasks();
+            let u_a: HashSet<u32> = unconstrained.iter().filter(|x| n.network.is_primitive(**x)).cloned().collect();
+            let u_c: HashSet<u32> = unconstrained.iter().filter(|x| !u_a.contains(*x)).cloned().collect();
+            println!("u_a: {:?}", u_a);
+            println!("u_c: {:?}", u_c);
+            if u_c.is_empty() {
+                for t in u_a.iter(){
+                    let task = n.network.get_task(*t).unwrap();
+                    if let Task::Primitive(a) = task {
+                        if a.is_applicable(&n.state) {
+                            let new_network = n.network.apply_action(*t);
+                            let new_state = a.transition(&n.state);
+                            let mut new_sequence = n.sequence.clone();
+                            new_sequence.push(task.get_name());
+                            let new_search_node = SearchNode::new(
+                                new_state,
+                                new_network,
+                                new_sequence
+                            );
+                            self.fringe.push_back(new_search_node)
+                        }
+                    }
+                }
+            } else {
+                let t = u_c.iter().next().unwrap();
+                let task = n.network.get_task(*t).unwrap();
+                if let Task::Compound(c) = task {
+                    for m in c.methods_iter() {
+                        let new_network = n.network.decompose(*t, m);
+                        let new_search_node = SearchNode::new(
+                            n.state.clone(),
+                            new_network,
+                            n.sequence.clone()
+                        );
+                        self.fringe.push_back(new_search_node);
+                    }
+                }
+            }
+        }
+        SearchResult::Unsolvable
     }
+}
 
-    pub fn expand_node<T:Hash + Eq>(node: SearchNode<T>) -> Vec<SearchNode<T>> {
-        unimplemented!()
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::example::create_problem_instance;
+
+    // TODO: Fix this test
+    #[test]
+    pub fn correctness_test() {
+        let htn = create_problem_instance();
+        let mut search = ProgressionSearch::<u32>::new();
+        let result = search.run(HashSet::new(), htn);
+        println!("{:?}", result);
     }
 }

@@ -26,11 +26,9 @@ impl<T: Eq + Hash> PrimitiveAction<T> {
     }
 }
 
-impl<T> Applicability<T> for PrimitiveAction<T>
-where
-    T: Eq + Hash + Clone,
-{
-    fn is_applicable(&self, state: &HashSet<T>) -> bool
+impl <U: Eq + Hash> Applicability for PrimitiveAction<U> {
+    type T = U;
+    fn is_applicable(&self, state: &HashSet<Self::T>) -> bool
     {
         for condition in self.pre_cond.iter() {
             if !state.contains(condition) {
@@ -40,9 +38,9 @@ where
         true
     }
 
-    fn transition(&self, state: &HashSet<T>) -> HashSet<T>
-    where T: Eq + Hash + Clone{
-        let mut new_state: HashSet<T> = state
+    fn transition(&self, state: &HashSet<Self::T>) -> HashSet<Self::T>
+    where Self::T: Eq + Hash + Clone{
+        let mut new_state: HashSet<Self::T> = state
             .iter()
             .cloned()
             .filter(|x| !self.del_effects.contains(x))

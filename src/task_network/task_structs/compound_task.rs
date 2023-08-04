@@ -16,4 +16,8 @@ impl<T: Hash + Eq> CompoundTask<T> {
     pub fn add_method(&mut self, method: Method<T>) {
         self.methods.push(method);
     }
+
+    pub fn methods_iter(&self) -> impl Iterator<Item = &Method<T>> {
+        self.methods.iter()
+    }
 }

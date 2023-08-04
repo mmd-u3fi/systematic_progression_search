@@ -1,5 +1,6 @@
 mod task_network;
 mod search;
+mod example;
 
 // #[cfg(test)]
 // mod tests {
