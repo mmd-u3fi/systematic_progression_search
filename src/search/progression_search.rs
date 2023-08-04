@@ -21,17 +21,11 @@ impl <T: Hash + Eq + Clone + std::fmt::Debug> ProgressionSearch<T> {
         let init = SearchNode::new(initial_state, initial_network, Vec::new());
         self.fringe.push_back(init);
         while !self.fringe.is_empty() {
-            println!("-----------------");
-            println!("fringe size: {:?}", self.fringe.len());
             let n = self.fringe.pop_front().unwrap();
             if n.is_goal() { return SearchResult::Solved(n.sequence);}
             let unconstrained = n.network.get_unconstrained_tasks();
             let u_a: HashSet<u32> = unconstrained.iter().filter(|x| n.network.is_primitive(**x)).cloned().collect();
             let u_c: HashSet<u32> = unconstrained.iter().filter(|x| !u_a.contains(*x)).cloned().collect();
-            println!("unconstrained: {:?}", unconstrained);
-            println!("u_a: {:?}", u_a);
-            println!("u_c: {:?}", u_c);
-            println!("network size: {:?}", n.network.count_tasks());
             if u_c.is_empty() {
                 for t in u_a.iter(){
                     let task = n.network.get_task(*t).unwrap();
@@ -55,9 +49,7 @@ impl <T: Hash + Eq + Clone + std::fmt::Debug> ProgressionSearch<T> {
                 let task = n.network.get_task(*t).unwrap();
                 if let Task::Compound(c) = task {
                     for m in c.methods.iter() {
-                        println!("decomposing {:?} using {:?}", task.get_name(), m.name);
                         let new_network = n.network.decompose(*t, m);
-                        println!("{:?}", new_network);
                         let new_search_node = SearchNode::new(
                             n.state.clone(),
                             new_network,
@@ -77,7 +69,6 @@ mod test {
     use super::*;
     use crate::example::create_problem_instance;
 
-    // TODO: Fix this test
     #[test]
     pub fn hierarchy_correctness_test() {
         let htn = create_problem_instance();
