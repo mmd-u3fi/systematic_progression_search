@@ -79,10 +79,16 @@ mod test {
 
     // TODO: Fix this test
     #[test]
-    pub fn correctness_test() {
+    pub fn hierarchy_correctness_test() {
         let htn = create_problem_instance();
         let mut search = ProgressionSearch::<u32>::new();
         let result = search.run(HashSet::new(), htn);
-        println!("{:?}", result);
+        if let SearchResult::Solved(x) = result {
+            assert_eq!(x[2], "BuildFoundation");
+            assert_eq!(x[3], "BuildFrame");
+            assert_eq!(x[6], "BuildInterior");
+            assert_eq!(x[7], "PayBuilder");
+        }
+
     }
 }
