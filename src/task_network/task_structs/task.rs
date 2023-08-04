@@ -41,3 +41,34 @@ impl<T: Eq + Hash> Hash for Task<T> {
         }
     }
 }
+
+impl <T:Hash + Eq> Task<T> {
+    pub fn get_name(&self) -> String {
+        match self {
+            Task::Compound(CompoundTask { name, .. }) => name.clone(),
+            Task::Primitive(PrimitiveAction { name, .. }) => name.clone()
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashSet;
+
+    use crate::task_network::{CompoundTask, PrimitiveAction};
+
+    use super::Task;
+    #[test]
+    pub fn task_name_test() {
+        let compound = Task::Compound(CompoundTask::<u32>::new("task1".to_string(), Vec::new()));
+        assert_eq!(compound.get_name(), "task1".to_string());
+
+        let primitive = Task::Primitive(PrimitiveAction::<u32>::new(
+            "task2".to_string(),
+            HashSet::new(),
+            HashSet::new(),
+            HashSet::new()
+        ));
+        assert_eq!(primitive.get_name(), "task2".to_string());
+    }
+}
