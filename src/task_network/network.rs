@@ -28,7 +28,7 @@ impl<T: Hash + Eq> HTN<T> {
 
     pub fn get_task(&self, id: u32) -> Option<&Task<T>> {
         match self.mappings.get_key_value(&id) {
-            Some((_, y)) => Some(&*y),
+            Some((_, y)) => Some(y.as_ref()),
             None => None,
         }
     }
@@ -121,6 +121,13 @@ impl<T: Hash + Eq> HTN<T> {
         return true;
     }
 
+    pub fn apply_action(&self, id: u32) -> HTN<T> {
+        let mut new_mapping = self.mappings.clone();
+        new_mapping.remove(&id);
+        let new_graph = self.network.remove_node(id);
+        HTN { network: new_graph, mappings: new_mapping }
+    }
+
     fn layers_to_tasks(&self, layers: Vec<HashSet<u32>>) -> Vec<HashSet<&Task<T>>> {
         let mut result = Vec::with_capacity(layers.len());
         for layer in layers.into_iter() {
@@ -128,6 +135,14 @@ impl<T: Hash + Eq> HTN<T> {
             result.push(tasks.collect());
         }
         result
+    }
+
+    pub fn is_primitive(&self, id: u32) -> bool {
+        let task = self.mappings.get(&id).unwrap();
+        match task.as_ref() {
+            Task::Primitive(_) => true,
+            _ => false
+        }
     }
 }
 
@@ -280,5 +295,44 @@ mod tests {
 
         let result = HTN::is_isomorphic(&htn1, &htn2);
         assert_eq!(result, true);
+    }
+
+    #[test]
+    pub fn is_primitive_test() {
+        let (t1, t2, t3, t4) = create_initial_tasks();
+        // first graph
+        let nodes1: HashSet<u32> = HashSet::from([1, 2, 3, 4]);
+        let orderings1: Vec<(u32, u32)> = Vec::from([(1, 3), (2, 3), (3, 4)]);
+        let alpha =
+        HashMap::from([(1, t1), (2, t2), (3, t3), (4, t4)]);
+        let htn = HTN::new(
+            nodes1,
+            orderings1,
+            alpha,
+        );
+        assert_eq!(htn.is_primitive(1), true);
+        assert_eq!(htn.is_primitive(2), true);
+        assert_eq!(htn.is_primitive(3), false);
+        assert_eq!(htn.is_primitive(4), true);
+    }
+
+    #[test]
+    pub fn apply_action_test() {
+        let (t1, t2, t3, t4) = create_initial_tasks();
+        // first graph
+        let nodes1: HashSet<u32> = HashSet::from([1, 2, 3, 4]);
+        let orderings1: Vec<(u32, u32)> = Vec::from([(1, 3), (2, 3), (3, 4)]);
+        let alpha =
+        HashMap::from([(1, t1), (2, t2), (3, t3), (4, t4)]);
+        let htn = HTN::new(
+            nodes1,
+            orderings1,
+            alpha,
+        );
+        let new_htn = htn.apply_action(2);
+        assert_eq!(new_htn.count_tasks(), 3);
+        assert_eq!(new_htn.get_task(2), None);
+        assert_eq!(new_htn.is_primitive(3), false);
+        assert_eq!(new_htn.mappings.contains_key(&2), false);
     }
 }
