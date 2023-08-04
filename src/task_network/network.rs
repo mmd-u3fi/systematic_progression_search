@@ -341,4 +341,23 @@ mod tests {
         assert_eq!(new_htn_2.is_primitive(3), false);
         assert_eq!(new_htn_2.mappings.contains_key(&1), false);
     }
+
+    #[test]
+    pub fn last_action_test() {
+        let (t1, t2, t3, t4) = create_initial_tasks();
+        // first graph
+        let nodes1: HashSet<u32> = HashSet::from([1, 2, 4]);
+        let orderings1: Vec<(u32, u32)> = Vec::from([(1, 4), (2, 4)]);
+        let alpha =
+        HashMap::from([(1, t1), (2, t2), (4, t4)]);
+        let htn = HTN::new(
+            nodes1,
+            orderings1,
+            alpha,
+        );
+        let new_htn = htn.apply_action(2);
+        let new_htn_2 = new_htn.apply_action(1);
+        let new_htn_3 = new_htn_2.apply_action(4);
+        assert_eq!(new_htn_3.count_tasks(), 0);
+    }
 }

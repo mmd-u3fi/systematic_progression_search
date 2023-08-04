@@ -81,7 +81,7 @@ impl Graph {
         } else {
             let mut new_nodes = self.nodes.clone();
             new_nodes.remove(&id);
-            let mut new_edges = Vec::with_capacity(self.edges.keys().len() - 1);
+            let mut new_edges = Vec::with_capacity(self.edges.keys().len());
             for (key, values) in self.edges.iter() {
                 if *key == id {
                     continue;
