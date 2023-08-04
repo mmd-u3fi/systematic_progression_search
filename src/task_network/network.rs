@@ -266,6 +266,7 @@ mod tests {
         assert_eq!(result.count_tasks(), 8);
         assert_eq!(result.get_unconstrained_tasks(), HashSet::from([1, 2]));
         assert_eq!(Graph::convert_edges_to_vec(&result.network.edges).len(), 8);
+        assert_eq!(result.get_task(3), None);
         assert_eq!(result.network.edges.get(&1).unwrap().len(), 1);
     }
 
@@ -334,5 +335,10 @@ mod tests {
         assert_eq!(new_htn.get_task(2), None);
         assert_eq!(new_htn.is_primitive(3), false);
         assert_eq!(new_htn.mappings.contains_key(&2), false);
+        let new_htn_2 = new_htn.apply_action(1);
+        assert_eq!(new_htn_2.count_tasks(), 2);
+        assert_eq!(new_htn_2.get_task(1), None);
+        assert_eq!(new_htn_2.is_primitive(3), false);
+        assert_eq!(new_htn_2.mappings.contains_key(&1), false);
     }
 }

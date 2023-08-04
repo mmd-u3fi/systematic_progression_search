@@ -1,6 +1,7 @@
 use std::{collections::HashSet, hash::Hash};
 use super::HTN;
 
+#[derive(Debug)]
 pub struct SearchNode<T: Hash + Eq> {
     pub state: HashSet<T>,
     pub network: HTN<T>,
